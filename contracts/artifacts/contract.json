@@ -1,0 +1,1 @@
+{"name": "Store", "methods": [{"name": "create_subscription", "args": [{"type": "address", "name": "reciever"}, {"type": "string", "name": "sub_name"}, {"type": "string", "name": "metadata_hash"}, {"type": "pay", "name": "sub_amount"}], "returns": {"type": "uint64"}}], "networks": {}}

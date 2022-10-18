@@ -1,0 +1,177 @@
+#pragma version 7
+intcblock 1 0
+bytecblock 0x746f74616c5f737562736372697074696f6e73 0x6d61785f7375625f7072696365 0x6d696e5f7375625f7072696365
+txn NumAppArgs
+intc_1 // 0
+==
+bnz main_l4
+txna ApplicationArgs 0
+pushbytes 0xc2dba76c // "create_subscription(address,string,string,pay)uint64"
+==
+bnz main_l3
+err
+main_l3:
+txn OnCompletion
+intc_1 // NoOp
+==
+txn ApplicationID
+intc_1 // 0
+!=
+&&
+assert
+txna ApplicationArgs 1
+store 0
+txna ApplicationArgs 2
+store 1
+txna ApplicationArgs 3
+store 2
+txn GroupIndex
+intc_0 // 1
+-
+store 3
+load 3
+gtxns TypeEnum
+intc_0 // pay
+==
+assert
+load 0
+load 1
+load 2
+load 3
+callsub createsubscription_4
+store 4
+pushbytes 0x151f7c75 // 0x151f7c75
+load 4
+itob
+concat
+log
+intc_0 // 1
+return
+main_l4:
+txn OnCompletion
+intc_1 // NoOp
+==
+bnz main_l10
+txn OnCompletion
+intc_0 // OptIn
+==
+bnz main_l9
+txn OnCompletion
+pushint 4 // UpdateApplication
+==
+bnz main_l8
+err
+main_l8:
+txn ApplicationID
+intc_1 // 0
+!=
+assert
+callsub update_2
+intc_0 // 1
+return
+main_l9:
+txn ApplicationID
+intc_1 // 0
+!=
+assert
+callsub optin_3
+intc_0 // 1
+return
+main_l10:
+txn ApplicationID
+intc_1 // 0
+==
+assert
+callsub create_0
+intc_0 // 1
+return
+
+// create
+create_0:
+bytec_1 // "max_sub_price"
+pushint 5000 // 5000
+app_global_put
+bytec_2 // "min_sub_price"
+pushint 10000000 // 10000000
+app_global_put
+bytec_0 // "total_subscriptions"
+intc_1 // 0
+app_global_put
+retsub
+
+// auth_only
+authonly_1:
+global CreatorAddress
+==
+retsub
+
+// update
+update_2:
+txn Sender
+callsub authonly_1
+// unauthorized
+assert
+intc_0 // 1
+return
+
+// opt_in
+optin_3:
+intc_0 // 1
+return
+
+// create_subscription
+createsubscription_4:
+store 8
+store 7
+store 6
+store 5
+load 8
+gtxns Amount
+bytec_2 // "min_sub_price"
+app_global_get
+>=
+// Subscription amount must be between 5 mAlgo and 10 Algo
+assert
+load 8
+gtxns Amount
+bytec_1 // "max_sub_price"
+app_global_get
+<=
+// Subscription amount must be between 5 mAlgo and 10 Algo
+assert
+load 8
+gtxns Receiver
+global CurrentApplicationAddress
+==
+// payment must to the store contract address
+assert
+itxn_begin
+pushint 3 // acfg
+itxn_field TypeEnum
+load 5
+itxn_field ConfigAssetManager
+load 5
+itxn_field ConfigAssetClawback
+load 5
+itxn_field ConfigAssetFreeze
+load 5
+itxn_field ConfigAssetReserve
+intc_0 // 1
+itxn_field ConfigAssetDefaultFrozen
+load 7
+extract 2 0
+itxn_field ConfigAssetMetadataHash
+load 6
+extract 2 0
+itxn_field ConfigAssetName
+intc_0 // 1
+itxn_field ConfigAssetTotal
+itxn_submit
+bytec_0 // "total_subscriptions"
+bytec_0 // "total_subscriptions"
+app_global_get
+intc_0 // 1
++
+app_global_put
+itxn CreatedAssetID
+retsub
